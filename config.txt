@@ -1,0 +1,3 @@
+Server: http://parse.sfm8.hackreactor.com/
+App ID: 72b8e073a4abde10221ce95f38ed1c63bd7f3d6b
+API Key: cf1ce23a61e2a40702c347b7dc1e0af8c28f6c7a
