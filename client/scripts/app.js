@@ -3,10 +3,11 @@
 var app = {};
 app.init = function () {
   $(document).ready(function () {
+    $('#send .submit').unbind('submit').bind('submit');
     $('.username').on('click', function () {
       app.handleUsernameClick();
     });
-    $('#send .submit').submit(function () {
+    $('#send .submit').on('submit', function () {
       app.handleSubmit();
     });
   });
