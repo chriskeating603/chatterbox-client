@@ -1,7 +1,16 @@
 
 
 var app = {};
-app.init = function () {};
+app.init = function () {
+  $(document).ready(function () {
+    $('.username').on('click', function () {
+      app.handleUsernameClick();
+    });
+    $('#send .submit').submit(function () {
+      app.handleSubmit();
+    });
+  });
+};
 app.send = function (message) {
   message = message || {
     username: 'Mel Brooks',
@@ -51,7 +60,8 @@ app.renderRoom = function (room) {
   $('#roomSelect').append($(`<a href=“#”>${room}</a>`));
 };
 app.handleUsernameClick = function () {
-  $('.username').on('click', function () {
-    alert('hello');
-  });
+  return true;
+};
+app.handleSubmit = function () {
+  return true;
 };
