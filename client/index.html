@@ -36,10 +36,36 @@
        <a href=“#”>Link 3</a>
      </div>
     </div>
-    <form>Message goes here.
+    <form class="submit">Message goes here.
       <input id="message" type="text">
-      <input id="send" class="submit" type="submit" value="Submit" name="">
+      <input id="send" type="submit" value="Submit" name="">
     </form>
+    <script>
+    $('.submit #send').click(function( event ) {
+      event.preventDefault();
+      //app.handleSubmit();
+
+  var obj = $.ajax({
+    // This is the url you should use to communicate with the parse API server.
+    url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages',
+    type: 'GET',
+    contentType: 'application/json',
+    success: function (data) {
+      console.log('chatterbox: Message received');
+    },
+    error: function (data) {
+      // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+      console.error('chatterbox: Failed to send message', data);
+    }
+  });
+        for (var i = 0; i < obj.responseJSON.results.length; i++) {
+    console.log(obj.responseJSON.results[i]);
+  }
+    });
+
+
+
+    </script>
     <div id="chats"></div>
   </body>
 </html>
