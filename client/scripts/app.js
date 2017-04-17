@@ -1,81 +1,121 @@
-window.user = {};
-var app = {};
-app.init = function () {
-    //$('#send .submit').unbind('submit').bind('submit');
-    $('.username').on('click', function () {
-      app.handleUsernameClick();
-    });
-    $('.submit #send').on('submit', function (event) {
-      app.handleSubmit();
-    });
-};
-app.send = function (message) {
-  message = message || {
-    username: 'Mel Brooks',
-    text: 'It\'s good to be the king',
-    roomname: 'lobby'
-  };
-  $.ajax({
-    // This is the url you should use to communicate with the parse API server.
-    url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages',
-    type: 'POST',
-    data: JSON.stringify(message),
-    contentType: 'application/json',
-    success: function (data) {
-      console.log('chatterbox: Message sent');
-    },
-    error: function (data) {
-      // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to send message', data);
+var app = {
+  server: "http://parse.sfm8.hackreactor.com/chatterbox/classes/messages",
+  username: 'Chris',
+  roomname: 'lobby',
+  messages: [],
+  lastMessageId: 0,
+  friends: {},
+
+  init: function () {
+    app.username = window.location.search.substr(10);
+    app.$message = $('#message');
+    app.$chats = $('#chats');
+    app.$roomSelect = $('#roomSelect');
+    app.$send = $('#send');
+
+    app.$send.on('submit', app.handleSubmit);
+    app.$roomSelect.on('change', app.handleRoomChange);
+    app.$chats.on('click', '.username', app.handleUsernameClick);
+
+    app.fetch();
+
+    // setInterval(function () {
+    //   console.log('hey')
+    //   app.fetch();
+    // }, 3000)
+  },
+
+  fetch: function (){
+    $.ajax ({
+      url: app.server,
+      type: 'GET',
+      data: {order: '-createdAt'},
+      success: function (data) {
+        if (!data.results || !data.results.length) { return; }
+        app.messages = data.results; 
+        var mostRecentMessage = app.messages[app.messages.length - 1];
+        app.renderRoomList(app.messages);
+        app.renderMessages(app.messages);
+      },
+      error: function (error) {
+        console.log(error)
+      }
+    })
+  }, 
+
+  renderMessages: function (messages) {
+    app.clearMessages();
+    for (var i = 0; i < messages.length; i++) {
+      app.renderMessage(messages[i])
     }
-  });
-};
-app.fetch = function () {
-  var obj = $.ajax({
-    // This is the url you should use to communicate with the parse API server.
-    url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages',
-    type: 'GET',
-    contentType: 'application/json',
-    success: function (data) {
-      console.log('chatterbox: Message received');
-    },
-    error: function (data) {
-      // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to send message', data);
+  },
+
+  clearMessages: function () {
+    app.$chats.html('');
+  },
+
+  renderMessage: function (message) {
+    var $chat = $('<div class="chat"/>')
+    var $username = $('<span class="username"/>')
+    $username.text(message.username + ': ').appendTo($chat);
+    if (app.friends[message.username] === true) {
+      $username.addClass('friend')
     }
-  });
-  for (var i = 0; i < obj.responseJSON.results.length; i++) {
-    $('#chats').append(obj.responseJSON.results[i]);
+    var $message = $('<br><span>/');
+    $message.text(message.text).appendTo($chat);
+    app.$chats.append($chat)
+  },
+
+  escapeHTML: function (string) {
+    if (!string) {return;}
+    return string.replace(/[&<>"'\/]/g, '')
+  }, 
+
+  handleSubmit: function (event) {
+    $.ajax ({
+      url: app.server,
+      type: 'POST',
+      data: {
+        username: app.username,
+        text: app.$message.val(),
+        roomname: app.roomname || 'lobby'
+      },
+      success: function (data) {
+        app.$message.val('');
+        app.fetch();
+      },
+      error: function (error) {
+        console.log('FAILED: ' + error)
+      }
+    })
+    console.log('handleSubmit is happening')
+    event.preventDefault();
+  },
+
+  renderRoomList: function (messages) {
+    app.$roomSelect.html('<option value="_newRoom">New room...</option></select>')
+
+    if (messages) {
+      messages.forEach(function (message) {
+        var roomname = message.roomname;
+        if (roomname) {
+          app.renderRoom(roomname)
+        }
+      })
+    }
+  },
+
+  renderRoom: function (roomname) {
+    var $option = $('<option/>').val(roomname).text(roomname);
+    app.$roomSelect.append($option);
+  },
+
+  handleUsernameClick: function (event) {
+    var username = event.target.innerText;
+    $('.username').each(function () {
+      if (this.innerText === username) {
+        $(this).toggleClass('friend')
+      } 
+    })
   }
-
-  //console.log(results);
-};
-app.clearMessages = function () {
-  $('#chats').empty();
-};
-app.renderMessage = function (message) {
-  var name = $('<input type="button" value=' + message.username + ': >').addClass('username');
-  var content = $(`<div>${message.text}</div>`);
-  name.append(content);
-  $('#chats').append(name);
-};
-app.renderRoom = function (room) {
-  $('#roomSelect').append($(`<a href=“#”>${room}</a>`));
-};
-app.handleUsernameClick = function () {
-
-  return true;
-};
-app.handleSubmit = function () {
-  // take ID message
-  // convert message to send
-  // use send function to send message
-
-  var obj = {username: 'Nichris',
-    text: $('message').val(),
-    roomname: 'lobby'};
-    
-  app.send(obj);
-            
-  return true;
-};
+}
